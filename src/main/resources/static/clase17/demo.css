@@ -1,0 +1,15 @@
+/* Estilos de las páginas de demostración de la Clase 17 */
+body { font-family: Arial, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; color: #1d1d1f; background: #fff; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.15rem; margin-top: 28px; }
+.box { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 12px 0; background: #fafafa; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+.bad { border-color: #d33; background: #fff5f5; }
+.good { border-color: #2a8; background: #f3fbf7; }
+input, textarea { width: 100%; box-sizing: border-box; padding: 8px; margin: 4px 0 10px; font: inherit; }
+button { padding: 8px 14px; margin: 4px 4px 4px 0; cursor: pointer; border-radius: 6px; border: 1px solid #888; background: #fff; }
+pre { background: #1e1e1e; color: #e6e6e6; padding: 12px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; }
+code { background: #eee; padding: 1px 4px; border-radius: 4px; }
+.comment { border-bottom: 1px dashed #ccc; padding: 6px 0; }
+.note { font-size: 0.9rem; color: #555; }

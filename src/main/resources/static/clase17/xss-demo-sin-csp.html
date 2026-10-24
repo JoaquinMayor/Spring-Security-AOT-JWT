@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Demo XSS (sin CSP)</title>
+    <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<h1>Clase 17 · Demo de XSS <small>(esta página NO tiene Content-Security-Policy)</small></h1>
+<p class="note">
+    ⚠ Página vulnerable a propósito: el servidor NO le envía el header CSP
+    (ver <code>SecurityHeadersConfig.XSS_DEMO_WITHOUT_CSP</code>). Acá el <code>alert</code> SÍ se ejecuta.
+    Volver a la <a href="xss-demo.html">versión con CSP</a>.
+</p>
+
+<div class="box">
+    <h2>1. Obtener un JWT (Clase 15)</h2>
+    <input id="username" value="user@example.com" aria-label="Email">
+    <input id="password" type="password" value="User123!" aria-label="Contraseña">
+    <button id="btnLogin">Login</button> <span id="loginStatus"></span>
+</div>
+
+<div class="box">
+    <h2>2. Publicar un comentario malicioso</h2>
+    <textarea id="texto" rows="2" aria-label="Comentario">&lt;img src=x onerror="alert('XSS: te robé la sesión')"&gt;</textarea>
+    <button id="btnPublicar">Publicar</button> <span id="publicarStatus"></span>
+</div>
+
+<h2>3. ¿Cómo se muestra?</h2>
+<button id="btnCargar">Cargar comentarios</button>
+<div class="grid">
+    <div class="box bad">
+        <strong>❌ Vulnerable:</strong> <code>/sin-escapar</code> + <code>innerHTML</code>
+        <div id="vulnerable"></div>
+    </div>
+    <div class="box good">
+        <strong>✅ Seguro:</strong> <code>textContent</code> (y la API escapa la salida)
+        <div id="seguro"></div>
+    </div>
+</div>
+
+<script src="xss-demo.js"></script>
+</body>
+</html>

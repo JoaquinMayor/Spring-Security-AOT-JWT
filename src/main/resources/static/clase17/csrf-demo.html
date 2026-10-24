@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Demo CSRF</title>
+    <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<h1>Clase 17 · Demo de CSRF</h1>
+
+<div class="box">
+    <h2>Paso 0. Iniciar sesión (con cookie de sesión)</h2>
+    <p>
+        Entrá a <a href="/login" target="_blank" rel="noopener">/login</a> con
+        <code>user@example.com</code> / <code>User123!</code> y volvé a esta pestaña.
+        A partir de ahí tu navegador tiene la cookie <code>JSESSIONID</code>
+        y la envía <strong>solo</strong> en cada petición: eso es lo que aprovecha un ataque CSRF.
+    </p>
+</div>
+
+<div class="grid">
+    <div class="box good">
+        <h2>✅ Petición legítima</h2>
+        <p class="note">La página lee la cookie <code>XSRF-TOKEN</code> y la reenvía en el header
+            <code>X-XSRF-TOKEN</code>. Un sitio malicioso no puede leer esa cookie.</p>
+        <button id="btnToken">1. Obtener token CSRF</button>
+        <button id="btnLegitima">2. Transferir CON token</button>
+    </div>
+    <div class="box bad">
+        <h2>❌ Simulación de ataque</h2>
+        <p class="note">Misma petición, con la cookie de sesión, pero SIN token CSRF
+            (como la enviaría un formulario oculto de otro sitio).</p>
+        <button id="btnAtaque">Transferir SIN token</button>
+    </div>
+</div>
+
+<h2>Resultado</h2>
+<pre id="resultado">(todavía nada)</pre>
+
+<script src="csrf-demo.js"></script>
+</body>
+</html>

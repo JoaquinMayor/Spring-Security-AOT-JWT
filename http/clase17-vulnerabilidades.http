@@ -1,0 +1,116 @@
+### =====================================================================
+### CLASE 17 - Prevención de vulnerabilidades
+### Las demos de XSS y CSRF se prueban en el NAVEGADOR:
+###   http://localhost:8080/clase17/xss-demo.html
+###   http://localhost:8080/clase17/xss-demo-sin-csp.html
+###   http://localhost:8080/clase17/csrf-demo.html
+### =====================================================================
+
+@base = http://localhost:8080
+
+### ---------------- SQL INJECTION ----------------
+
+### 1) Búsqueda normal -> 1 producto
+GET {{base}}/api/clase17/sql/vulnerable?nombre=Teclado
+
+### 2) ATAQUE ' OR '1'='1 en el endpoint VULNERABLE -> devuelve TODO (incluso productos ocultos)
+GET {{base}}/api/clase17/sql/vulnerable?nombre=x%27%20OR%20%271%27%3D%271
+
+### 3) ATAQUE UNION -> lee la tabla de usuarios (¡aparecen los hashes BCrypt!)
+GET {{base}}/api/clase17/sql/vulnerable?nombre=x%27%20UNION%20SELECT%20id%2C%20username%2C%20password%2C%200%20FROM%20usuarios%20--
+
+### 4) Mismo ataque en el endpoint SEGURO (consulta parametrizada) -> []
+GET {{base}}/api/clase17/sql/seguro?nombre=x%27%20OR%20%271%27%3D%271
+
+### 5) Mismo ataque con consulta derivada de Spring Data -> []
+GET {{base}}/api/clase17/sql/seguro-jpa?nombre=x%27%20OR%20%271%27%3D%271
+
+### ---------------- NoSQL INJECTION (simulación MongoDB) ----------------
+
+### 6) ATAQUE con operador $ne -> ¡login exitoso sin saber la contraseña!
+POST {{base}}/api/clase17/nosql/login-vulnerable
+Content-Type: application/json
+
+{ "username": { "$ne": null }, "password": { "$ne": null } }
+
+### 7) Mismo ataque contra el endpoint con DTO tipado -> 400
+POST {{base}}/api/clase17/nosql/login-seguro
+Content-Type: application/json
+
+{ "username": { "$ne": null }, "password": { "$ne": null } }
+
+### 8) Login legítimo en el endpoint seguro -> 200
+POST {{base}}/api/clase17/nosql/login-seguro
+Content-Type: application/json
+
+{ "username": "maria", "password": "M4ria#2024" }
+
+### 9) ID de documento inválido (ejemplo Firestore) -> 400
+GET {{base}}/api/clase17/nosql/documentos/a$b
+
+### ---------------- TOKENS para lo que sigue ----------------
+
+### 10) Token de usuario común
+POST {{base}}/api/v1/auth/login
+Content-Type: application/json
+
+{ "username": "user@example.com", "password": "User123!" }
+
+> {% client.global.set("userToken", response.body.token); %}
+
+### 11) Token de administrador
+POST {{base}}/api/v1/auth/login
+Content-Type: application/json
+
+{ "username": "admin@example.com", "password": "Admin123!" }
+
+> {% client.global.set("adminToken", response.body.token); %}
+
+### ---------------- XSS ----------------
+
+### 12) Publicar un comentario con un script -> la respuesta viene ESCAPADA (&lt;script&gt;)
+POST {{base}}/api/clase17/comentarios
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{ "texto": "<script>alert('XSS')</script>" }
+
+### 13) Validación de entrada: comentario vacío -> 400
+POST {{base}}/api/clase17/comentarios
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{ "texto": "" }
+
+### ---------------- MÍNIMO PRIVILEGIO ----------------
+
+### 14) Endpoint de admin con token de USER -> 403 Forbidden
+GET {{base}}/api/clase17/admin/usuarios
+Authorization: Bearer {{userToken}}
+
+### 15) Endpoint de admin con token de ADMIN -> 200
+GET {{base}}/api/clase17/admin/usuarios
+Authorization: Bearer {{adminToken}}
+
+### ---------------- PAGINACIÓN ----------------
+
+### 16) Página 0 de 5 elementos ordenados por precio descendente
+GET {{base}}/api/clase17/productos?page=0&size=5&sort=precio,desc
+Authorization: Bearer {{userToken}}
+
+### 17) Filtrar por categoría, página 1 de 10 elementos
+GET {{base}}/api/clase17/productos?categoria=accesorios&page=1&size=10
+Authorization: Bearer {{userToken}}
+
+### 18) Intentar pedir un millón de elementos -> se limita a 50
+GET {{base}}/api/clase17/productos?size=1000000
+Authorization: Bearer {{userToken}}
+
+### ---------------- HEADERS DE SEGURIDAD y ERRORES ----------------
+
+### 19) Mirá los headers de la respuesta: Content-Security-Policy, X-Frame-Options, X-XSS-Protection...
+GET {{base}}/clase17/xss-demo.html
+
+### 20) Error controlado: ordenar por un campo inexistente -> 400 genérico, sin stacktrace
+GET {{base}}/api/clase17/productos?sort=campoInventado
+Authorization: Bearer {{userToken}}

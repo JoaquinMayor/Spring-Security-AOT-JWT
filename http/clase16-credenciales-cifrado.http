@@ -1,0 +1,64 @@
+### =====================================================================
+### CLASE 16 - Gestión de credenciales y cifrado
+### =====================================================================
+
+@base = http://localhost:8080
+
+### 1) Hashing SHA-256 sin sal vs. con sal (ejecutalo 2 veces y compará)
+POST {{base}}/api/clase16/demo/hash
+Content-Type: application/json
+
+{ "texto": "123456" }
+
+### 2) BCrypt: dos hashes distintos para la misma contraseña
+POST {{base}}/api/clase16/demo/bcrypt
+Content-Type: application/json
+
+{ "texto": "password123" }
+
+### 3) BCrypt: verificar (pegá en "hash" uno de los hashes del paso 2)
+POST {{base}}/api/clase16/demo/bcrypt/verificar
+Content-Type: application/json
+
+{ "texto": "password123", "hash": "PEGAR_ACA_EL_HASH" }
+
+### 4) AES: versión básica (ECB, determinista) vs. AES-GCM (IV aleatorio)
+POST {{base}}/api/clase16/demo/aes/cifrar
+Content-Type: application/json
+
+{ "texto": "DNI 30123456" }
+
+### 5) AES-GCM: descifrar (pegá uno de los "aesGcm_..." del paso 4; cambiale una letra y mirá cómo falla)
+POST {{base}}/api/clase16/demo/aes/descifrar
+Content-Type: application/json
+
+{ "texto": "PEGAR_ACA_EL_TEXTO_CIFRADO" }
+
+### 6) Registro con contraseña DÉBIL -> 400 (validación @StrongPassword)
+POST {{base}}/api/v1/auth/register
+Content-Type: application/json
+
+{ "username": "debil@example.com", "password": "123456" }
+
+### 7) Login para obtener un token (necesario para los pasos 8 a 10)
+POST {{base}}/api/v1/auth/login
+Content-Type: application/json
+
+{ "username": "user@example.com", "password": "User123!" }
+
+> {% client.global.set("token", response.body.token); %}
+
+### 8) Guardar un token de API externa (se cifra con AES antes de llegar a la BD)
+POST {{base}}/api/clase16/credenciales
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "servicio": "github", "tokenApi": "ghp_miTokenSuperSecreto1234" }
+
+### 9) Así se ve en la base de datos (¡cifrado!)
+GET {{base}}/api/clase16/credenciales/como-se-ve-en-la-bd
+Authorization: Bearer {{token}}
+
+### 10) Recuperar el token original (solo el dueño). Cambiá el 1 por el id devuelto en el paso 8.
+GET {{base}}/api/clase16/credenciales/1/token
+Authorization: Bearer {{token}}

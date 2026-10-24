@@ -1,0 +1,57 @@
+### =====================================================================
+### CLASE 15 - JWT y OAuth2
+### Ejecutar con IntelliJ (HTTP Client) o VS Code (extensión "REST Client").
+### Ejecutá los requests en orden: el login guarda el token automáticamente.
+### =====================================================================
+
+@base = http://localhost:8080
+
+### 1) Login con un usuario de prueba -> devuelve un JWT
+# @name login
+POST {{base}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "user@example.com",
+  "password": "User123!"
+}
+
+> {% client.global.set("token", response.body.token); %}
+
+### 2) Endpoint protegido CON token -> 200
+GET {{base}}/api/test/authenticated
+Authorization: Bearer {{token}}
+
+### 3) Endpoint protegido SIN token -> 401 Unauthorized
+GET {{base}}/api/test/authenticated
+
+### 4) Token alterado (firma inválida) -> 401
+GET {{base}}/api/test/authenticated
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoYWNrZXJAZXhhbXBsZS5jb20ifQ.firmaFalsa
+
+### 5) Login con contraseña incorrecta -> 401 con mensaje genérico
+POST {{base}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "username": "user@example.com",
+  "password": "incorrecta"
+}
+
+### 6) Registrar un usuario nuevo -> 201 + token
+POST {{base}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "username": "maria@email.com",
+  "password": "Maria123!"
+}
+
+### 7) Lista de usuarios (protegido)
+GET {{base}}/api/v1/usuarios
+Authorization: Bearer {{token}}
+
+### 8) OAuth2: estos se prueban en el NAVEGADOR (hay redirecciones a Google/GitHub):
+###    http://localhost:8080/login     -> formulario + links "Google" y "GitHub"
+###    http://localhost:8080/profile   -> datos del usuario logueado
+###    http://localhost:8080/welcome   -> saludo personalizado
